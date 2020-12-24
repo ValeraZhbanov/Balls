@@ -45,7 +45,7 @@ LONG_PTR WINAPI DlgSettingProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM l
         color1 = GetDlgItem(hWnd, IDC_BODYCOLOR1);
         ToolTip(hWnd, color1, "Изменить цвет");
         speed1 = GetDlgItem(hWnd, IDC_SPEED1);
-        SendMessage(speed1, TBM_SETRANGE, TRUE, MAKELPARAM(0, 25));
+        SendMessage(speed1, TBM_SETRANGE, TRUE, MAKELPARAM(1, 25));
         SendMessage(speed1, TBM_SETPOS, TRUE, setting.Player.Speed.Max);
         size1 = GetDlgItem(hWnd, IDC_SIZE1);
         SendMessage(size1, TBM_SETRANGE, TRUE, MAKELPARAM(10, 50));
@@ -73,7 +73,7 @@ LONG_PTR WINAPI DlgSettingProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM l
         color2 = GetDlgItem(hWnd, IDC_BODYCOLOR2);
         ToolTip(hWnd, color2, "Изменить цвет");
         speed2 = GetDlgItem(hWnd, IDC_SPEED2);
-        SendMessage(speed2, TBM_SETRANGE, TRUE, MAKELPARAM(0, 25));
+        SendMessage(speed2, TBM_SETRANGE, TRUE, MAKELPARAM(1, 25));
         SendMessage(speed2, TBM_SETPOS, TRUE, setting.Enemy.Speed.Max);
         size2 = GetDlgItem(hWnd, IDC_SIZE2);
         SendMessage(size2, TBM_SETRANGE, TRUE, MAKELPARAM(10, 50));
@@ -103,7 +103,7 @@ LONG_PTR WINAPI DlgSettingProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM l
         DestroyWindow(hWnd);
     };
 
-    auto Cls_OnCommand = [](HWND hWnd, int id, HWND hWndCtl, UINT codeNotify) {
+    auto Cls_OnCommand = [](HWND hWnd, INT id, HWND hWndCtl, UINT codeNotify) {
         switch(id) {
             case IDC_BODYCOLOR1:
                 if(auto color = ChooseColorDialog(hWnd).Show()) {
@@ -139,7 +139,7 @@ LONG_PTR WINAPI DlgSettingProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM l
                 setting.Player.Bullet.Speed = SendMessage(bulletspeed1, TBM_GETPOS, 0, 0);
                 setting.Player.Bullet.Size = SendMessage(bulletsize1, TBM_GETPOS, 0, 0);
                 setting.Player.Bullet.ChanceShoot = (DOUBLE)SendMessage(bulletchance1, TBM_GETPOS, 0, 0) / 10;
-                setting.Player.Bullet.Time = 50 + SendMessage(hWndCtl, CB_GETCURSEL, 0, 0) * 400;
+                setting.Player.Bullet.Time = 50 + SendMessage(bulletdistance1, CB_GETCURSEL, 0, 0) * 400;
 
                 setting.Enemy.Count = SendMessage(count2, TBM_GETPOS, 0, 0);
                 setting.Enemy.Speed.Max = SendMessage(speed2, TBM_GETPOS, 0, 0);
@@ -147,7 +147,7 @@ LONG_PTR WINAPI DlgSettingProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM l
                 setting.Enemy.Bullet.Speed = SendMessage(bulletspeed2, TBM_GETPOS, 0, 0);
                 setting.Enemy.Bullet.Size = SendMessage(bulletsize2, TBM_GETPOS, 0, 0);
                 setting.Enemy.Bullet.ChanceShoot = (DOUBLE)SendMessage(bulletchance2, TBM_GETPOS, 0, 0) / 10;
-                setting.Enemy.Bullet.Time = 50 + SendMessage(hWndCtl, CB_GETCURSEL, 0, 0) * 400;
+                setting.Enemy.Bullet.Time = 50 + SendMessage(bulletdistance2, CB_GETCURSEL, 0, 0) * 400;
 
                 if(MessageBox(hWnd, "Применить выбранные настройки?", "Предупреждение", MB_ICONINFORMATION | MB_OKCANCEL) == IDOK)
                     GameSetting = setting;
@@ -200,7 +200,7 @@ LONG_PTR WINAPI DlgAboutProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lPa
         DestroyWindow(hWnd);
     };
 
-    auto Cls_OnCommand = [](HWND hWnd, int id, HWND hwndCtl, UINT codeNotify) {
+    auto Cls_OnCommand = [](HWND hWnd, INT id, HWND hwndCtl, UINT codeNotify) {
         switch(id) {
             case IDC_CANCEL:
                 SendMessage(hWnd, WM_CLOSE, 0, 0);
@@ -223,14 +223,14 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam) {
     };
 
     auto Cls_OnDestroy = [](HWND hWnd) {
-        PostQuitMessage(0);
+
     };
 
-    auto Cls_OnMouseMove = [](HWND hWnd, int x, int y, UINT keyFlags) {
+    auto Cls_OnMouseMove = [](HWND hWnd, INT x, INT y, UINT keyFlags) {
         CurrentGame.Player.Purpose = {x, y};
     };
 
-    auto Cls_OnCommand = [](HWND hWnd, int id, HWND hWndCtl, UINT codeNotify) {
+    auto Cls_OnCommand = [](HWND hWnd, INT id, HWND hWndCtl, UINT codeNotify) {
         switch(id) {
             case IDC_NEW:
                 CurrentGame = Game();
@@ -243,6 +243,7 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam) {
                 SetTimer(hWnd, IDT_OPENMENU, 10, 0);
                 return;
             case IDC_CONTINUE:
+                Window.Fill();
                 KillTimer(hWnd, IDT_OPENMENU);
                 SetTimer(hWnd, IDT_CLOSEMENU, 1, 0);
                 SetTimer(hWnd, IDT_GAME, 10, 0);
@@ -267,7 +268,7 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam) {
         EndPaint(hWnd, &PS);
     };
 
-    auto Cls_OnKey = [](HWND hWnd, UINT vk, BOOL fDown, int cRepeat, UINT flags) {
+    auto Cls_OnKey = [](HWND hWnd, UINT vk, BOOL fDown, INT cRepeat, UINT flags) {
         switch(vk) {
             case VK_F1:
                 SendMessage(hWnd, WM_COMMAND, IDC_HELP, 0);
@@ -317,9 +318,90 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam) {
     }
 }
 
+
+LRESULT WINAPI TaskBarProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam) {
+    static HMENU PopupMenu = {};
+    static NOTIFYICONDATA NotifyIcon = {};
+
+    auto Cls_OnCreate = [](HWND hWnd, LPCREATESTRUCT lpCreateStruct) {
+        PopupMenu = CreatePopupMenu();
+        AppendMenu(PopupMenu, MF_STRING, IDM_OPENGAME, "Вернуться в игру");
+        AppendMenu(PopupMenu, MF_STRING, IDM_EXIT, "Закрыть");
+        SendMessage(hWnd, WM_SIZE, SIZE_MINIMIZED, 0);
+        return BOOL(1);
+    };
+
+    auto Cls_OnDestroy = [](HWND hWnd) {
+        PostQuitMessage(0);
+    };
+
+    auto Cls_OnCommand = [](HWND hWnd, INT id, HWND hWndCtl, UINT codeNotify) {
+        switch(id) {
+            case IDM_OPENGAME:
+                Window = Main(WndProc);
+                return;
+            case IDM_EXIT:
+                Shell_NotifyIcon(NIM_DELETE, &NotifyIcon);
+                SendMessage(hWnd, WM_DESTROY, 0, 0);
+                return;
+        }
+    };
+
+    auto Cls_OnSize = [](HWND hWnd, UINT state, INT cx, INT cy) {
+        if(state & SIZE_MINIMIZED) {
+            NotifyIcon.cbSize = sizeof(NOTIFYICONDATA);
+            NotifyIcon.hWnd = hWnd;
+            NotifyIcon.uID = IDI_GAME;
+            NotifyIcon.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
+            NotifyIcon.uCallbackMessage = WM_SHELLNOTIFY;
+            NotifyIcon.hIcon = Icon;
+            lstrcpy(NotifyIcon.szTip, AppName);
+            ShowWindow(hWnd, SW_HIDE);
+            Shell_NotifyIcon(NIM_ADD, &NotifyIcon);
+        }
+    };
+
+    auto Cls_OnShellNotify = [](HWND hWnd, INT id, UINT codeNotify) {
+        if(id == IDI_GAME) {
+            switch(codeNotify) {
+                case WM_RBUTTONDOWN | WM_RBUTTONUP:
+                    POINT PT;
+                    GetCursorPos(&PT);
+                    SetForegroundWindow(hWnd);
+                    TrackPopupMenu(PopupMenu, TPM_RIGHTALIGN, PT.x, PT.y, 0, hWnd, 0);
+                    return;
+                case WM_LBUTTONDOWN:
+                    SendMessage(hWnd, WM_COMMAND, IDM_OPENGAME, 0);
+                    return;
+
+            }
+        }
+    };
+
+    switch(uMessage) {
+        HANDLE_MSG(hWnd, WM_CREATE, Cls_OnCreate);
+        HANDLE_MSG(hWnd, WM_DESTROY, Cls_OnDestroy);
+        HANDLE_MSG(hWnd, WM_COMMAND, Cls_OnCommand);
+        HANDLE_MSG(hWnd, WM_SIZE, Cls_OnSize);
+        HANDLE_MSG(hWnd, WM_SHELLNOTIFY, Cls_OnShellNotify);
+        default: return DefWindowProc(hWnd, uMessage, wParam, lParam);
+    }
+}
+
 INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, INT nCmdShow) {
 
-    Window = Main(WndProc);
+    WNDCLASSEX wc{};
+    wc.cbSize = sizeof(WNDCLASSEX);
+    wc.style = CS_HREDRAW | CS_VREDRAW | CS_BYTEALIGNWINDOW;
+    wc.lpfnWndProc = TaskBarProc;
+    wc.hInstance = hInstance;
+    wc.lpszClassName = "TaskBar";
+    wc.hIcon = Icon;
+    wc.hIconSm = Icon;
+    RegisterClassEx(&wc);
+
+
+    CreateWindowEx(WS_EX_LEFT, "TaskBar", "", WS_POPUP, 0, 0, 0, 0, 0, 0, hInstance, 0);
 
     MSG msg;
     while(GetMessage(&msg, 0, 0, 0)) {

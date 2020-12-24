@@ -113,19 +113,21 @@ public:
     }
 
     INT Score() {
-        return max(
-            0, Speed
-            + GameSetting.Enemy.Count * 3
+        auto enemy = 0.0
+            + Speed
+            - GameSetting.Enemy.Size / 10
             + GameSetting.Enemy.Bullet.ChanceShoot
-            + GameSetting.Enemy.Bullet.Size / 2
-            + GameSetting.Enemy.Bullet.Speed / 2
-            + GameSetting.Enemy.Bullet.Time / 3
-            - GameSetting.Player.Speed.Max / 8
-            + GameSetting.Player.Size * 4
-            - GameSetting.Player.Bullet.ChanceShoot * 16
-            - GameSetting.Player.Bullet.Size * 2
-            - GameSetting.Player.Bullet.Speed * 2
-            - GameSetting.Player.Bullet.Time / 20);
+            + GameSetting.Enemy.Bullet.Size
+            + GameSetting.Enemy.Bullet.Speed
+            + GameSetting.Enemy.Bullet.Time;
+        auto player = 0.0
+            - GameSetting.Player.Speed.Max
+            + GameSetting.Player.Size
+            - GameSetting.Player.Bullet.ChanceShoot
+            - GameSetting.Player.Bullet.Size / 10
+            - GameSetting.Player.Bullet.Speed
+            - GameSetting.Player.Bullet.Time;
+        return max(0, (enemy * max(GameSetting.Enemy.Count, 10) + player) / 10);
     }
 };
 

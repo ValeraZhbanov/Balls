@@ -43,6 +43,17 @@
 #define IDC_TEXT                        1001
 #define IDC_CANCEL                      1002
 
+#define IDI_GAME                        101
+#define IDM_OPENGAME                    1001
+#define IDM_EXIT                        1002
+#define WM_SHELLNOTIFY                  (WM_USER + 1)
+
+#define HANDLE_WM_SHELLNOTIFY(hWnd, wParam, lParam, fn) \
+    ((fn)((hWnd), (INT)(wParam), (INT)(lParam)), 0L)
+
+auto Icon = (HICON)LoadImage(0, "icon.ico", IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_LOADFROMFILE);
+auto AppName = "Balls";
+
 class ToolTip {
 public:
     ToolTip(HWND hWnd, HWND hWndTool, LPCSTR pszText) {
@@ -155,14 +166,14 @@ public:
         wc.cbClsExtra = 0;
         wc.cbWndExtra = 0;
         wc.hInstance = GetModuleHandle(0);
-        wc.hIcon = (HICON)LoadImage(0, "icon.ico", IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_LOADFROMFILE);
+        wc.hIcon = Icon;
         wc.hCursor = LoadCursor(0, IDC_ARROW);
         wc.hbrBackground = 0;
         wc.lpszMenuName = 0;
         wc.lpszClassName = "Window";
         RegisterClass(&wc);
 
-        hWnd = CreateWindowEx(0, "Window", "Balls", WS_MINIMIZEBOX | WS_SYSMENU | WS_VISIBLE | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, 1400, 840, 0, 0, GetModuleHandle(0), 0);
+        hWnd = CreateWindowEx(0, "Window", AppName, WS_MINIMIZEBOX | WS_SYSMENU | WS_VISIBLE | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, 1400, 840, 0, 0, GetModuleHandle(0), 0);
         Center(hWnd);
         GetClientRect(hWnd, &RT);
         hDC = GetDC(hWnd);
