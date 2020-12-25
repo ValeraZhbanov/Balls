@@ -329,29 +329,15 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam) {
     };
 
     auto Cls_OnSetCursor = [](HWND hWnd, HWND hWndCursor, UINT codeHitTest, UINT msg) {
-        if(IsWindowEnabled(hWnd)) {
-            SetFocus(hWndCursor);
-        } else {
-            if(msg & MK_LBUTTON ||
-               msg & MK_MBUTTON ||
-               msg & MK_RBUTTON) {
-                FLASHWINFO fi{};
-                fi.cbSize = sizeof(FLASHWINFO);
-                fi.hwnd = GetForegroundWindow();
-                fi.dwFlags = FLASHW_ALL;
-                fi.uCount = 5;
-                fi.dwTimeout = 70;
-                FlashWindowEx(&fi);
-            }
-        }
-        return FALSE;
+        SetFocus(hWndCursor);
+        return FORWARD_WM_SETCURSOR(hWnd, hWndCursor, codeHitTest, msg, DefWindowProc);
     };
 
     auto Cls_OnSize = [](HWND hwnd, UINT state, int cx, int cy) {
         Window.Size();
     };
 
-    auto Cls_OnGetMinMaxInfo=[](HWND hwnd, LPMINMAXINFO lpMinMaxInfo) {
+    auto Cls_OnGetMinMaxInfo = [](HWND hwnd, LPMINMAXINFO lpMinMaxInfo) {
         lpMinMaxInfo->ptMinTrackSize = {800, 600};
     };
 
@@ -384,9 +370,10 @@ LRESULT WINAPI TaskBarProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lPara
         NotifyIcon.cbSize = sizeof(NOTIFYICONDATA);
         NotifyIcon.hWnd = hWnd;
         NotifyIcon.uID = IDI_GAME;
-        NotifyIcon.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
+        NotifyIcon.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP | NIF_STATE;
         NotifyIcon.uCallbackMessage = WM_SHELLNOTIFY;
         NotifyIcon.hIcon = Icon;
+
         lstrcpy(NotifyIcon.szTip, AppName);
         ShowWindow(hWnd, SW_HIDE);
         Shell_NotifyIcon(NIM_ADD, &NotifyIcon);
