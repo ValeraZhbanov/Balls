@@ -14,7 +14,7 @@
 #include "Gui.h"
 #include "Game.h"
 
-LONG_PTR WINAPI DlgSettingProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam) {
+BOOL WINAPI DlgSettingProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam) {
     static HWND color1 = {};
     static HWND speed1 = {};
     static HWND size1 = {};
@@ -33,7 +33,6 @@ LONG_PTR WINAPI DlgSettingProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM l
     static HWND bulletsize2 = {};
     static HWND bulletdistance2 = {};
     static HWND bulletchance2 = {};
-
 
     static Setting setting;
 
@@ -95,7 +94,10 @@ LONG_PTR WINAPI DlgSettingProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM l
         SendMessage(bulletchance2, TBM_SETRANGE, TRUE, MAKELPARAM(0, 100));
         SendMessage(bulletchance2, TBM_SETPOS, TRUE, setting.Enemy.Bullet.ChanceShoot * 10);
 
-        return BOOL(1);
+        ToolTip(hWnd, GetDlgItem(hWnd, IDC_SET), "Установить настройки");
+        ToolTip(hWnd, GetDlgItem(hWnd, IDC_CANCEL), "Закрыть");
+
+        return TRUE;
     };
 
     auto Cls_OnClose = [](HWND hWnd) {
@@ -149,7 +151,7 @@ LONG_PTR WINAPI DlgSettingProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM l
                 setting.Enemy.Bullet.ChanceShoot = (DOUBLE)SendMessage(bulletchance2, TBM_GETPOS, 0, 0) / 10;
                 setting.Enemy.Bullet.Time = 50 + SendMessage(bulletdistance2, CB_GETCURSEL, 0, 0) * 400;
 
-                if(MessageBox(hWnd, "Применить выбранные настройки?", "Предупреждение", MB_ICONINFORMATION | MB_OKCANCEL) == IDOK)
+                if(MessageBox(hWnd, "Применить выбранные настройки?", "Предупреждение", MB_ICONINFORMATION | MB_YESNO) == IDYES)
                     GameSetting = setting;
             case IDC_CANCEL:
                 SendMessage(hWnd, WM_CLOSE, 0, 0);
@@ -166,7 +168,12 @@ LONG_PTR WINAPI DlgSettingProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM l
             FillRect(lpDrawItem->hDC, &lpDrawItem->rcItem, setting.Enemy.BodyColor);
         } else if(lpDrawItem->hwndItem == bulletcolor2) {
             FillRect(lpDrawItem->hDC, &lpDrawItem->rcItem, setting.Enemy.Bullet.Color);
-        }
+        } else ItemDraw draw(lpDrawItem);
+    };
+
+    auto Cls_OnSetCursor = [](HWND hWnd, HWND hWndCursor, UINT codeHitTest, UINT msg) {
+        SetFocus(hWndCursor);
+        return FALSE;
     };
 
     switch(uMessage) {
@@ -174,17 +181,20 @@ LONG_PTR WINAPI DlgSettingProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM l
         HANDLE_MSG(hWnd, WM_CLOSE, Cls_OnClose);
         HANDLE_MSG(hWnd, WM_COMMAND, Cls_OnCommand);
         HANDLE_MSG(hWnd, WM_DRAWITEM, Cls_OnDrawItem);
+        HANDLE_MSG(hWnd, WM_SETCURSOR, Cls_OnSetCursor);
         default: return 0;
     }
 }
 
-LONG_PTR WINAPI DlgAboutProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam) {
+BOOL WINAPI DlgAboutProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam) {
     static HWND text = {};
+    static HWND cancel = {};
 
     auto Cls_OnInitDialog = [&](HWND hWnd, HWND hWndFocus, LPARAM lParam) {
         EnableWindow(Window, 0);
 
         text = GetDlgItem(hWnd, IDC_TEXT);
+        cancel = GetDlgItem(hWnd, IDC_CANCEL);
 
         std::wifstream fin(L"about.txt", std::wifstream::binary);
         fin.imbue(std::locale(std::locale(), new std::codecvt_utf8<wchar_t>()));
@@ -192,7 +202,7 @@ LONG_PTR WINAPI DlgAboutProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lPa
         std::getline(fin, str, L'\0');
         SetWindowTextW(text, str.c_str());
 
-        return BOOL(1);
+        return TRUE;
     };
 
     auto Cls_OnClose = [](HWND hWnd) {
@@ -208,10 +218,21 @@ LONG_PTR WINAPI DlgAboutProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lPa
         }
     };
 
+    auto Cls_OnDrawItem = [](HWND hWnd, const DRAWITEMSTRUCT * lpDrawItem) {
+        ItemDraw draw(lpDrawItem);
+    };
+
+    auto Cls_OnSetCursor = [](HWND hWnd, HWND hWndCursor, UINT codeHitTest, UINT msg) {
+        SetFocus(hWndCursor);
+        return FALSE;
+    };
+
     switch(uMessage) {
         HANDLE_MSG(hWnd, WM_INITDIALOG, Cls_OnInitDialog);
         HANDLE_MSG(hWnd, WM_CLOSE, Cls_OnClose);
         HANDLE_MSG(hWnd, WM_COMMAND, Cls_OnCommand);
+        HANDLE_MSG(hWnd, WM_DRAWITEM, Cls_OnDrawItem);
+        HANDLE_MSG(hWnd, WM_SETCURSOR, Cls_OnSetCursor);
         default: return 0;
     }
 }
@@ -219,7 +240,7 @@ LONG_PTR WINAPI DlgAboutProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lPa
 LRESULT WINAPI WndProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam) {
 
     auto Cls_OnCreate = [&](HWND hWnd, LPCREATESTRUCT lpCreateStruct) {
-        return BOOL(1);
+        return TRUE;
     };
 
     auto Cls_OnDestroy = [](HWND hWnd) {
@@ -274,9 +295,7 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam) {
                 SendMessage(hWnd, WM_COMMAND, IDC_HELP, 0);
                 break;
             case VK_F2:
-                KillTimer(hWnd, IDT_GAME);
-                KillTimer(hWnd, IDT_CLOSEMENU);
-                SetTimer(hWnd, IDT_OPENMENU, 10, 0);
+                SendMessage(hWnd, WM_COMMAND, IDC_PAUSE, 0);
                 break;
         }
     };
@@ -305,6 +324,37 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam) {
         }
     };
 
+    auto Cls_OnDrawItem = [](HWND hWnd, const DRAWITEMSTRUCT * lpDrawItem) {
+        ItemDraw draw(lpDrawItem);
+    };
+
+    auto Cls_OnSetCursor = [](HWND hWnd, HWND hWndCursor, UINT codeHitTest, UINT msg) {
+        if(IsWindowEnabled(hWnd)) {
+            SetFocus(hWndCursor);
+        } else {
+            if(msg & MK_LBUTTON ||
+               msg & MK_MBUTTON ||
+               msg & MK_RBUTTON) {
+                FLASHWINFO fi{};
+                fi.cbSize = sizeof(FLASHWINFO);
+                fi.hwnd = GetForegroundWindow();
+                fi.dwFlags = FLASHW_ALL;
+                fi.uCount = 5;
+                fi.dwTimeout = 70;
+                FlashWindowEx(&fi);
+            }
+        }
+        return FALSE;
+    };
+
+    auto Cls_OnSize = [](HWND hwnd, UINT state, int cx, int cy) {
+        Window.Size();
+    };
+
+    auto Cls_OnGetMinMaxInfo=[](HWND hwnd, LPMINMAXINFO lpMinMaxInfo) {
+        lpMinMaxInfo->ptMinTrackSize = {800, 600};
+    };
+
     switch(uMessage) {
         HANDLE_MSG(hWnd, WM_CREATE, Cls_OnCreate);
         HANDLE_MSG(hWnd, WM_DESTROY, Cls_OnDestroy);
@@ -314,10 +364,13 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam) {
         HANDLE_MSG(hWnd, WM_KEYDOWN, Cls_OnKey);
         HANDLE_MSG(hWnd, WM_CONTEXTMENU, Cls_OnContextMenu);
         HANDLE_MSG(hWnd, WM_TIMER, Cls_OnTimer);
+        HANDLE_MSG(hWnd, WM_DRAWITEM, Cls_OnDrawItem);
+        HANDLE_MSG(hWnd, WM_SETCURSOR, Cls_OnSetCursor);
+        HANDLE_MSG(hWnd, WM_SIZE, Cls_OnSize);
+        HANDLE_MSG(hWnd, WM_GETMINMAXINFO, Cls_OnGetMinMaxInfo);
         default: return DefWindowProc(hWnd, uMessage, wParam, lParam);
     }
 }
-
 
 LRESULT WINAPI TaskBarProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam) {
     static HMENU PopupMenu = {};
@@ -327,7 +380,18 @@ LRESULT WINAPI TaskBarProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lPara
         PopupMenu = CreatePopupMenu();
         AppendMenu(PopupMenu, MF_STRING, IDM_OPENGAME, "Вернуться в игру");
         AppendMenu(PopupMenu, MF_STRING, IDM_EXIT, "Закрыть");
-        SendMessage(hWnd, WM_SIZE, SIZE_MINIMIZED, 0);
+
+        NotifyIcon.cbSize = sizeof(NOTIFYICONDATA);
+        NotifyIcon.hWnd = hWnd;
+        NotifyIcon.uID = IDI_GAME;
+        NotifyIcon.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
+        NotifyIcon.uCallbackMessage = WM_SHELLNOTIFY;
+        NotifyIcon.hIcon = Icon;
+        lstrcpy(NotifyIcon.szTip, AppName);
+        ShowWindow(hWnd, SW_HIDE);
+        Shell_NotifyIcon(NIM_ADD, &NotifyIcon);
+
+        SendMessage(hWnd, WM_COMMAND, IDM_OPENGAME, 0);
         return BOOL(1);
     };
 
@@ -338,26 +402,13 @@ LRESULT WINAPI TaskBarProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lPara
     auto Cls_OnCommand = [](HWND hWnd, INT id, HWND hWndCtl, UINT codeNotify) {
         switch(id) {
             case IDM_OPENGAME:
-                Window = Main(WndProc);
+                if(!Window) Window = Main(WndProc);
+                else ShowWindow(Window, 10);
                 return;
             case IDM_EXIT:
                 Shell_NotifyIcon(NIM_DELETE, &NotifyIcon);
                 SendMessage(hWnd, WM_DESTROY, 0, 0);
                 return;
-        }
-    };
-
-    auto Cls_OnSize = [](HWND hWnd, UINT state, INT cx, INT cy) {
-        if(state & SIZE_MINIMIZED) {
-            NotifyIcon.cbSize = sizeof(NOTIFYICONDATA);
-            NotifyIcon.hWnd = hWnd;
-            NotifyIcon.uID = IDI_GAME;
-            NotifyIcon.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
-            NotifyIcon.uCallbackMessage = WM_SHELLNOTIFY;
-            NotifyIcon.hIcon = Icon;
-            lstrcpy(NotifyIcon.szTip, AppName);
-            ShowWindow(hWnd, SW_HIDE);
-            Shell_NotifyIcon(NIM_ADD, &NotifyIcon);
         }
     };
 
@@ -373,7 +424,6 @@ LRESULT WINAPI TaskBarProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lPara
                 case WM_LBUTTONDOWN:
                     SendMessage(hWnd, WM_COMMAND, IDM_OPENGAME, 0);
                     return;
-
             }
         }
     };
@@ -382,7 +432,6 @@ LRESULT WINAPI TaskBarProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lPara
         HANDLE_MSG(hWnd, WM_CREATE, Cls_OnCreate);
         HANDLE_MSG(hWnd, WM_DESTROY, Cls_OnDestroy);
         HANDLE_MSG(hWnd, WM_COMMAND, Cls_OnCommand);
-        HANDLE_MSG(hWnd, WM_SIZE, Cls_OnSize);
         HANDLE_MSG(hWnd, WM_SHELLNOTIFY, Cls_OnShellNotify);
         default: return DefWindowProc(hWnd, uMessage, wParam, lParam);
     }
@@ -390,16 +439,18 @@ LRESULT WINAPI TaskBarProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lPara
 
 INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, INT nCmdShow) {
 
-    WNDCLASSEX wc{};
-    wc.cbSize = sizeof(WNDCLASSEX);
-    wc.style = CS_HREDRAW | CS_VREDRAW | CS_BYTEALIGNWINDOW;
+    WNDCLASS wc{};
+    wc.style;
     wc.lpfnWndProc = TaskBarProc;
+    wc.cbClsExtra;
+    wc.cbWndExtra;
     wc.hInstance = hInstance;
-    wc.lpszClassName = "TaskBar";
     wc.hIcon = Icon;
-    wc.hIconSm = Icon;
-    RegisterClassEx(&wc);
-
+    wc.hCursor;
+    wc.hbrBackground;
+    wc.lpszMenuName;
+    wc.lpszClassName = "TaskBar";
+    RegisterClass(&wc);
 
     CreateWindowEx(WS_EX_LEFT, "TaskBar", "", WS_POPUP, 0, 0, 0, 0, 0, 0, hInstance, 0);
 

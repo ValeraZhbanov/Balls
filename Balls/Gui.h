@@ -6,15 +6,15 @@
 
 #include "Settings.h"
 
-#define IDC_PAUSE               1001
-#define IDC_NEW                 1002
-#define IDC_CONTINUE            1003
-#define IDC_SETTING             1004
-#define IDC_HELP                1005
+#define IDC_PAUSE                       1001
+#define IDC_NEW                         1002
+#define IDC_CONTINUE                    1003
+#define IDC_SETTING                     1004
+#define IDC_HELP                        1005
 
-#define IDT_OPENMENU            1001
-#define IDT_CLOSEMENU           1002
-#define IDT_GAME                1003
+#define IDT_OPENMENU                    1001
+#define IDT_CLOSEMENU                   1002
+#define IDT_GAME                        1003
 
 
 #define IDD_SETTING                     101
@@ -74,7 +74,6 @@ public:
 class MainMenu {
     HWND Menu = {};
     INT CurrX = {};
-
 public:
     HWND New = {};
     HWND Continue = {};
@@ -88,15 +87,17 @@ public:
     HWND Setting = {};
     HWND Help = {};
 
+    INT Width = 800;
+
     MainMenu() {}
     MainMenu(HWND hWnd) : CurrX(0) {
         HWND child = {};
         int style = WS_CHILD | WS_VISIBLE;
-        Menu = CreateWindowEx(WS_EX_DLGMODALFRAME | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE, "static", "", style | WS_BORDER, CurrX, 0, 400, 800, hWnd, (HMENU)0, GetModuleHandle(0), 0);
+        Menu = CreateWindowEx(WS_EX_DLGMODALFRAME | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE, "static", "", style | WS_BORDER, CurrX, 0, 400, Width, hWnd, (HMENU)0, GetModuleHandle(0), 0);
 
-        New = CreateWindowEx(0, "button", "Новая игра", style | WS_BORDER, CurrX + 10, 10, 190, 30, hWnd, (HMENU)IDC_NEW, GetModuleHandle(0), 0);
+        New = CreateWindowEx(0, "button", "Новая игра", style | WS_BORDER | BS_OWNERDRAW, CurrX + 10, 10, 190, 30, hWnd, (HMENU)IDC_NEW, GetModuleHandle(0), 0);
         ToolTip(hWnd, New, "Запуск игры");
-        Continue = CreateWindowEx(0, "button", "Продолжить", style | WS_BORDER, CurrX + 200, 10, 190, 30, hWnd, (HMENU)IDC_CONTINUE, GetModuleHandle(0), 0);
+        Continue = CreateWindowEx(0, "button", "Продолжить", style | WS_BORDER | BS_OWNERDRAW, CurrX + 200, 10, 190, 30, hWnd, (HMENU)IDC_CONTINUE, GetModuleHandle(0), 0);
         ToolTip(hWnd, Continue, "Продолжить игру или начать новую");
 
         child = CreateWindowEx(0, "button", "Прошлая игра", style | BS_GROUPBOX, 10, 50, 375, 90, Menu, (HMENU)0, GetModuleHandle(0), 0);
@@ -122,11 +123,7 @@ public:
     bool OpenTick() {
         if(CurrX < 0) {
             CurrX += 10;
-            MoveWindow(New, CurrX + 10, 10, 190, 30, 0);
-            MoveWindow(Continue, CurrX + 200, 10, 190, 30, 0);
-            MoveWindow(Setting, CurrX + 10, 760, 30, 30, 0);
-            MoveWindow(Help, CurrX + 44, 760, 30, 30, 0);
-            MoveWindow(Menu, CurrX, 0, 400, 800, 1);
+            Paint();
             return false;
         }
         return true;
@@ -135,14 +132,18 @@ public:
     bool CloseTick() {
         if(-400 < CurrX) {
             CurrX -= 10;
-            MoveWindow(New, CurrX + 10, 10, 180, 30, 0);
-            MoveWindow(Continue, CurrX + 10, 50, 180, 30, 0);
-            MoveWindow(Setting, CurrX + 10, 90, 180, 30, 0);
-            MoveWindow(Help, CurrX + 44, 760, 30, 30, 0);
-            MoveWindow(Menu, CurrX, 0, 400, 800, 1);
+            Paint();
             return false;
         }
         return true;
+    }
+
+    void Paint() {
+        MoveWindow(New, CurrX + 10, 10, 190, 30, 0);
+        MoveWindow(Continue, CurrX + 200, 10, 190, 30, 0);
+        MoveWindow(Setting, CurrX + 10, Width - 40, 30, 30, 0);
+        MoveWindow(Help, CurrX + 44, Width - 40, 30, 30, 0);
+        MoveWindow(Menu, CurrX, 0, 400, Width, 1);
     }
 };
 
@@ -161,26 +162,25 @@ public:
     Main(WNDPROC wndproc) {
 
         WNDCLASS wc{};
-        wc.style = CS_HREDRAW | CS_VREDRAW;
+        wc.style = CS_HREDRAW | CS_VREDRAW | CS_BYTEALIGNCLIENT | CS_BYTEALIGNWINDOW;
         wc.lpfnWndProc = wndproc;
-        wc.cbClsExtra = 0;
-        wc.cbWndExtra = 0;
+        wc.cbClsExtra;
+        wc.cbWndExtra;
         wc.hInstance = GetModuleHandle(0);
         wc.hIcon = Icon;
         wc.hCursor = LoadCursor(0, IDC_ARROW);
-        wc.hbrBackground = 0;
-        wc.lpszMenuName = 0;
+        wc.hbrBackground;
+        wc.lpszMenuName;
         wc.lpszClassName = "Window";
         RegisterClass(&wc);
 
-        hWnd = CreateWindowEx(0, "Window", AppName, WS_MINIMIZEBOX | WS_SYSMENU | WS_VISIBLE | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, 1400, 840, 0, 0, GetModuleHandle(0), 0);
+        hWnd = CreateWindowEx(0, "Window", AppName, WS_OVERLAPPEDWINDOW | WS_VISIBLE | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, 1400, 840, 0, 0, GetModuleHandle(0), 0);
         Center(hWnd);
-        GetClientRect(hWnd, &RT);
+        Size();
         hDC = GetDC(hWnd);
-        SetBkMode(hDC, TRANSPARENT);
         hDCM = CreateCompatibleDC(hDC);
         SetBkMode(hDCM, TRANSPARENT);
-        SelectObject(hDCM, CreateCompatibleBitmap(hDC, RT.right, RT.bottom));
+        SelectObject(hDCM, CreateCompatibleBitmap(hDC, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)));
         SelectObject(hDCM, GetStockObject(NULL_PEN));
         Fill();
         Menu = MainMenu(hWnd);
@@ -190,12 +190,20 @@ public:
         FillRect(hDCM, &RT, GameSetting.Battlefield.Color);
     }
 
+    void Size() {
+        GetClientRect(hWnd, &RT);
+        Fill();
+
+        Menu.Width = RT.bottom;
+        Menu.Paint();
+    }
+
     void Paint() {
         BitBlt(hDC, RT.left, RT.top, RT.right, RT.bottom, hDCM, 0, 0, SRCCOPY);
     }
 
     POINT GetRndPoint() {
-        return {rnd(RT.left, RT.right), rnd(RT.top, RT.bottom)};
+        return {(LONG)rnd(RT.left, RT.right), (LONG)rnd(RT.top, RT.bottom)};
     }
 
     operator HDC() {
@@ -205,6 +213,11 @@ public:
     operator HWND() {
         return hWnd;
     }
+
+    operator BOOL() {
+        return IsWindow(hWnd);
+    }
+
 private:
 
     HMENU CreateContextMenu() {
@@ -244,3 +257,50 @@ public:
     }
 };
 
+class ItemDraw {
+    HWND hWnd;
+    const DRAWITEMSTRUCT * lpDrawItem = {};
+
+    void DrawButton() {
+        auto hDCM = CreateCompatibleDC(lpDrawItem->hDC);
+        auto bitmap = SelectObject(hDCM, CreateCompatibleBitmap(lpDrawItem->hDC, lpDrawItem->rcItem.right, lpDrawItem->rcItem.bottom));
+        auto brush = SelectObject(hDCM, CreateSolidBrush(0xAAAAAA));
+        auto font = SelectObject(hDCM, SelectObject(lpDrawItem->hDC, CreateFont(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)));
+
+        char text[30]{};
+        GetWindowText(lpDrawItem->hwndItem, text, 30);
+
+        SetBkMode(hDCM, TRANSPARENT);
+        SetTextColor(hDCM, 0x222222);
+
+        switch(lpDrawItem->itemAction) {
+            case ODA_FOCUS:
+                if(lpDrawItem->itemState & ODS_FOCUS)
+                    DeleteBrush(SelectObject(hDCM, CreateSolidBrush(0x00ff00)));
+                break;
+            case ODA_SELECT:
+                if(lpDrawItem->itemState & ODS_SELECTED) {
+                    DeleteBrush(SelectObject(hDCM, CreateSolidBrush(0x222222)));
+                    SetTextColor(hDCM, 0xEEEEEE);
+                }
+                break;
+        }
+        Rectangle(hDCM, lpDrawItem->rcItem.left, lpDrawItem->rcItem.top, lpDrawItem->rcItem.right, lpDrawItem->rcItem.bottom);
+        DrawText(hDCM, text, strlen(text), (LPRECT)&lpDrawItem->rcItem, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+        BitBlt(lpDrawItem->hDC, 0, 0, lpDrawItem->rcItem.right, lpDrawItem->rcItem.bottom, hDCM, 0, 0, SRCCOPY);
+
+        DeleteObject(SelectObject(lpDrawItem->hDC, SelectObject(hDCM, font)));
+        DeleteObject(SelectObject(hDCM, bitmap));
+        DeleteObject(SelectObject(hDCM, brush));
+        DeleteDC(hDCM);
+    }
+
+public:
+    ItemDraw(const DRAWITEMSTRUCT * lpDrawItem = 0) : lpDrawItem(lpDrawItem) {
+        if(lpDrawItem)
+            switch(lpDrawItem->CtlType) {
+                case ODT_BUTTON: DrawButton(); return;
+            }
+    }
+};

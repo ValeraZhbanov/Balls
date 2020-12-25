@@ -22,11 +22,11 @@ public:
     virtual void Clear() = 0;
     virtual void Move(POINT PT) = 0;
 
-    static INT GetDistance(GameObject & first, GameObject & second) {
+    static DOUBLE GetDistance(GameObject & first, GameObject & second) {
         return std::hypot(first.point.x - second.point.x, first.point.y - second.point.y);
     }
 
-    static INT GetDistance(POINT & point, GameObject & object) {
+    static DOUBLE GetDistance(POINT & point, GameObject & object) {
         return std::hypot(point.x - object.point.x, point.y - object.point.y);
     }
 
@@ -213,14 +213,11 @@ struct Game {
 
         if(GetMinGistanceWithEnemys() < GameSetting.Player.Size + GameSetting.Enemy.Size) {
             GameOver("Вы погибли от избиения");
-
         }
 
         if(Enemys.size() && rnd(0, 100) < GameSetting.Player.Bullet.ChanceShoot) {
             PlayerBullets.push_back(Bullet(Player, GameSetting.Player.Bullet, Enemys[rnd(0, Enemys.size())]));
         }
-
-        auto size = max(max(PlayerBullets.size(), EnemyBullets.size()), Enemys.size());
 
         for(auto & bullet : PlayerBullets) {
             bullet.Paint();
@@ -254,8 +251,8 @@ struct Game {
         sout << "Счёт: " << Score;
 
         SelectObject(Window, GameSetting.Battlefield.Color);
-        Rectangle(Window, 1300, 10, 1380, 25);
-        TextOut(Window, 1300, 10, sout.str().c_str(), sout.str().size());
+        Rectangle(Window, Window.RT.right - 100, 10, Window.RT.right - 20, 25);
+        TextOut(Window, Window.RT.right - 100, 10, sout.str().c_str(), sout.str().size());
 
         Window.Paint();
     }

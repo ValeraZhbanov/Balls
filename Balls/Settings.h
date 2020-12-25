@@ -64,7 +64,7 @@ struct Setting {
 
 } GameSetting;
 
-static INT rnd(DOUBLE x, DOUBLE y) {
+static DOUBLE rnd(DOUBLE x, DOUBLE y) {
     static std::default_random_engine dre;
     return std::uniform_real_distribution<DOUBLE>(x, y - 1)(dre);
 }
