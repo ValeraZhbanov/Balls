@@ -68,3 +68,19 @@ static DOUBLE rnd(DOUBLE x, DOUBLE y) {
     static std::default_random_engine dre;
     return std::uniform_real_distribution<DOUBLE>(x, y - 1)(dre);
 }
+
+struct DPOINT {
+    DOUBLE x;
+    DOUBLE y;
+    DPOINT() : x(), y() {}
+    DPOINT(DOUBLE x, DOUBLE y) : x(x), y(y) {}
+    DPOINT(POINT point) : x(point.x), y(point.y) {}
+    
+    void Offset(DOUBLE dx, DOUBLE dy) {
+        x += dx, y += dy;
+    }
+
+    operator POINT() {
+        return {(LONG)x, (LONG)y};
+    }
+};

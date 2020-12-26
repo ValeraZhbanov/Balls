@@ -1,6 +1,5 @@
 #define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING 
 
-
 #include <Windows.h>
 #include <windowsx.h>
 #include <Commctrl.h>
@@ -248,7 +247,8 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam) {
     };
 
     auto Cls_OnMouseMove = [](HWND hWnd, INT x, INT y, UINT keyFlags) {
-        CurrentGame.Player.Purpose = {x, y};
+        CurrentGame.Player.Purpose.x = x;
+        CurrentGame.Player.Purpose.y = y;
     };
 
     auto Cls_OnCommand = [](HWND hWnd, INT id, HWND hWndCtl, UINT codeNotify) {

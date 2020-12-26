@@ -13,24 +13,24 @@ INT MaxScore;
 
 class GameObject {
 protected:
-    POINT point;
+    DPOINT point;
 
 public:
-    GameObject(POINT point) : point(point) {}
+    GameObject(DPOINT point) : point(point) {}
 
     virtual void Paint() = 0;
     virtual void Clear() = 0;
-    virtual void Move(POINT PT) = 0;
+    virtual void Move(DPOINT PT) = 0;
 
     static DOUBLE GetDistance(GameObject & first, GameObject & second) {
         return std::hypot(first.point.x - second.point.x, first.point.y - second.point.y);
     }
 
-    static DOUBLE GetDistance(POINT & point, GameObject & object) {
+    static DOUBLE GetDistance(DPOINT & point, GameObject & object) {
         return std::hypot(point.x - object.point.x, point.y - object.point.y);
     }
 
-    operator POINT() {
+    operator DPOINT() {
         return point;
     }
 };
@@ -38,8 +38,8 @@ public:
 class Player : public GameObject {
 
 public:
-    POINT Purpose;
-    Player(POINT point) : GameObject(point), Purpose() {}
+    DPOINT Purpose;
+    Player(DPOINT point) : GameObject(point), Purpose() {}
 
     virtual void Paint() {
         auto r = GameSetting.Player.Size;
@@ -53,9 +53,9 @@ public:
         Ellipse(Window, point.x - r, point.y - r, point.x + r, point.y + r);
     }
 
-    virtual void Move(POINT PT) {
-        auto dx = (DOUBLE)Purpose.x - point.x;
-        auto dy = (DOUBLE)Purpose.y - point.y;
+    virtual void Move(DPOINT PT) {
+        auto dx = Purpose.x - point.x;
+        auto dy = Purpose.y - point.y;
         auto m = std::hypot(dx, dy);
         auto speed = GameSetting.Player.Speed.Max;
         auto size = GameSetting.Player.Size;
@@ -63,7 +63,8 @@ public:
         if(GameSetting.Player.Size < m) {
             dx /= m, dx *= speed;
             dy /= m, dy *= speed;
-            PT = {point.x + (INT)dx, point.y + (INT)dy};
+            PT = point;
+            PT.Offset(dx, dy);
             if(PT.x < RT.left + size)
                 PT.x = RT.right - size;
             else if(RT.right - size < PT.x)
@@ -81,7 +82,7 @@ public:
 class Enemy : public GameObject {
     INT Speed;
 public:
-    Enemy(POINT point) : GameObject(point), Speed(rnd(GameSetting.Enemy.Speed.Min, GameSetting.Enemy.Speed.Max)) {}
+    Enemy(DPOINT point) : GameObject(point), Speed(rnd(GameSetting.Enemy.Speed.Min, GameSetting.Enemy.Speed.Max)) {}
 
     virtual void Paint() {
         auto r = GameSetting.Enemy.Size;
@@ -95,18 +96,19 @@ public:
         Ellipse(Window, point.x - r, point.y - r, point.x + r, point.y + r);
     }
 
-    virtual void Move(POINT p) {
-        auto dx = (DOUBLE)p.x - point.x;
-        auto dy = (DOUBLE)p.y - point.y;
+    virtual void Move(DPOINT PT) {
+        auto dx = PT.x - point.x;
+        auto dy = PT.y - point.y;
         auto m = std::hypot(dx, dy);
         auto speed = Speed;
         if(GameSetting.Enemy.Size < m) {
             dx /= m, dx *= speed;
             dy /= m, dy *= speed;
-            p = {point.x + (INT)dx, point.y + (INT)dy};
-            if(PtInRect(&Window.RT, p)) {
+            PT = point;
+            PT.Offset(dx, dy);
+            if(PtInRect(&Window.RT, PT)) {
                 Clear();
-                point = p;
+                point = PT;
                 Paint();
             }
         }
@@ -133,14 +135,14 @@ public:
 
 class Bullet : public GameObject {
     Setting::Bullet BulletData;
-    POINT prev;
+    DPOINT prev;
     DOUBLE dx;
     DOUBLE dy;
 public:
 
     INT Time;
 
-    Bullet(POINT point, Setting::Bullet & BulletData, POINT PT) : GameObject(point), prev(), BulletData(BulletData), Time(BulletData.Time) {
+    Bullet(DPOINT point, Setting::Bullet & BulletData, DPOINT PT) : GameObject(point), prev(), BulletData(BulletData), Time(BulletData.Time) {
         Move(PT);
     }
 
@@ -163,9 +165,9 @@ public:
         Ellipse(Window, point.x - r, point.y - r, point.x + r, point.y + r);
     }
 
-    virtual void Move(POINT PT) {
-        dx = (DOUBLE)PT.x - point.x;
-        dy = (DOUBLE)PT.y - point.y;
+    virtual void Move(DPOINT PT) {
+        dx = PT.x - point.x;
+        dy = PT.y - point.y;
         auto m = std::hypot(dx, dy);
         auto speed = BulletData.Speed;
         dx /= m, dx *= speed;
@@ -202,7 +204,7 @@ struct Game {
         Player.Move({});
 
         if(Enemys.size() < GameSetting.Enemy.Count) {
-            POINT PT;
+            DPOINT PT;
             while(GameObject::GetDistance(PT = Window.GetRndPoint(), Player) < GameSetting.Player.Size + 300);
             Enemys.push_back(Enemy(PT));
         }

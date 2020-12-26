@@ -202,8 +202,11 @@ public:
         BitBlt(hDC, RT.left, RT.top, RT.right, RT.bottom, hDCM, 0, 0, SRCCOPY);
     }
 
-    POINT GetRndPoint() {
-        return {(LONG)rnd(RT.left, RT.right), (LONG)rnd(RT.top, RT.bottom)};
+    DPOINT GetRndPoint() {
+        DPOINT point;
+        point.x = rnd(RT.left, RT.right);
+        point.y = rnd(RT.top, RT.bottom);
+        return point;
     }
 
     operator HDC() {
